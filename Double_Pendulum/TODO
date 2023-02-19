@@ -1,0 +1,3 @@
+Improve color_from_velocity function
+Make the pendulum parameters editable through sliders 
+Add other integration methods
