@@ -3,7 +3,7 @@
 import pygame
 import math
 from math import sin, cos
-
+from Stick import Stick
 ########### Variable Declaration ##########
 
 
@@ -22,9 +22,6 @@ pygame.display.set_caption("Double Pendulum Simulation")
 FPS = 60
 CLOCK = pygame.time.Clock()
 
-# Create Transparent Surface for path tracking
-path_history = pygame.Surface(DISPLAY_DIM, pygame.SRCALPHA, 32)
-path_history = path_history.convert_alpha()
 
 # ------------ Defining Global Variables ---------
 
@@ -66,68 +63,21 @@ class Pendulum:
         pygame.draw.line(win, self.color, origin, r2, self.line_width)
 
 
-
+n_sticks = 50 #number of sticks
+stick_len = 5
 
 # Top Pendulum
-pendulum_top = Pendulum(2, 1)
-pendulum_top.rotation_point = (DISPLAY_WIDTH / 2, DISPLAY_WIDTH * 0.4)
-# Bottom Pendulum
-pendulum_bottom = Pendulum(1, 0.7)
+stick_list = []
+for i in range(n_sticks):
+    stick = Stick(stick_len, [DISPLAY_WIDTH // 2 , DISPLAY_HEIGHT // 2])
+    stick.width = int((i + 1) ** 0.5)
+    stick_list.append(stick)
 
-# Initial conditions
-pendulum_top.angle = math.radians(60)
-pendulum_bottom.angle = math.radians(-30)
 
 
 ######### Auxiliary Funtions ########
-def solve_accelerations(p1 : Pendulum, p2 : Pendulum):
-    m1 = p1.mass
-    l1 = p1.lenght
-    x1 = p1.angle
-    v1 = p1.angle_vel
 
-    m2 = p2.mass
-    l2 = p2.lenght
-    x2 = p2.angle
-    v2 = p2.angle_vel
 
-    num1 = -g*(2*m1 + m2)*sin(x1)
-    num2 = -m2*g*sin(x1-2*x2)
-    num3_1 = -2*sin(x1-x2) * m2
-    num3_2 = v2**2 * l2 + v1**2*l1*cos(x1-x2)
-    den = l1 * (2 * m1 + m2 - m2 * cos(2*x1 -2 *x2))
-
-    a1 = (num1 + num2 + num3_1 * num3_2 ) / den
-
-    num1_1 = 2 * sin(x1 - x2)
-    num2 = v1 ** 2 * l1 * (m1 + m2)
-    num3 = g * (m1 + m2) * cos(x1)
-    num4 = v2 ** 2 * l2 * m2 * cos(x1 - x2)
-    den = l2 * (2 * m1 + m2 - m2 * cos(2 * x1 - 2 * x2))
-
-    a2 = num1_1 * (num2 + num3 + num4) / den
-
-    return (a1, a2)
-
-def color_from_velocity(vel):
-    vel = abs(vel)
-    vel_range = 7
-
-    a = min(vel, vel_range) / vel_range * 255
-    blue = 255 - a
-    red = a
-
-    color = (red, 0 , blue)
-
-    
-
-    # color = (
-    #             min(max(vel,0),255),
-    #             min(max(0,0),255),
-    #             min(max(vel,0),255)
-    #         )
-
-    return color
 #####################################
 # Initializing DeltaT counter
 getTicksLastFrame = pygame.time.get_ticks()
@@ -150,16 +100,7 @@ while running:
     getTicksLastFrame = t
 
     # --- Stepping ---
-    pendulum_top_acceleration, pendulum_bottom_acceleration = solve_accelerations(pendulum_top, pendulum_bottom)
-
-    pendulum_top.angle_vel += pendulum_top_acceleration * dt
-    pendulum_bottom.angle_vel += pendulum_bottom_acceleration * dt
-
-    pendulum_top.angle += pendulum_top.angle_vel * dt
-    pendulum_bottom.angle += pendulum_bottom.angle_vel * dt
-
-
-
+    # stick_1.set_direction(pygame.mouse.get_pos())
 
 
     ###### Rendering objects ####
@@ -167,20 +108,28 @@ while running:
     WIN.fill("white")
 
 
-    # --- Drawing path ---
-    pygame.draw.circle(path_history, color_from_velocity(pendulum_bottom.angle_vel), pendulum_bottom.end_coordinates(pendulum_top.end_coordinates()), 1)
-    WIN.blit(path_history, path_history.get_rect())
+    # Drawing sticks
+    for i in range(len(stick_list)):
+        if i == 0:
+            stick_list[i].set_end(pygame.mouse.get_pos())
+            continue
+        stick_list[i].set_end(stick_list[i-1].origin)
 
-    # Drawing Pendulums
-    pendulum_top.draw(WIN)
-    pendulum_bottom.draw(WIN, pendulum_top.end_coordinates())
-
+    for i in reversed(range(len(stick_list))):
+        if i == len(stick_list) - 1 :
+            stick_list[i].move_origin([DISPLAY_WIDTH // 2 , DISPLAY_HEIGHT // 2])
+            continue
+        stick_list[i].move_origin(stick_list[i+1].end)
+    
+    
+    for stick in stick_list:
+        stick.draw(WIN)
 
 
     # Updating Display
     pygame.display.update()
 
-
+    CLOCK.tick(FPS)
 
 
 pygame.quit()

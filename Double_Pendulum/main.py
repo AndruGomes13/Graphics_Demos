@@ -3,6 +3,7 @@
 import pygame
 import math
 from math import sin, cos
+import random
 
 ########### Variable Declaration ##########
 
@@ -69,14 +70,14 @@ class Pendulum:
 
 
 # Top Pendulum
-pendulum_top = Pendulum(2, 1)
+pendulum_top = Pendulum(3, 1)
 pendulum_top.rotation_point = (DISPLAY_WIDTH / 2, DISPLAY_WIDTH * 0.4)
 # Bottom Pendulum
-pendulum_bottom = Pendulum(1, 0.7)
+pendulum_bottom = Pendulum(1, 0.5)
 
 # Initial conditions
-pendulum_top.angle = math.radians(60)
-pendulum_bottom.angle = math.radians(-30)
+pendulum_top.angle = math.radians(random.randint(50, 60))
+pendulum_bottom.angle = math.radians(-random.randint(30, 60))
 
 
 ######### Auxiliary Funtions ########
